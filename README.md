@@ -97,3 +97,4 @@ python ./src/predict.py --out ./example --seq ./example/test.fa --model ./exampl
 
 
 
+"# OCR" 

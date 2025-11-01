@@ -4,20 +4,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 import pandas as pd
+
 import tensorflow as tf
+
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+    except RuntimeError as e:
+        print(e)
+
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import Dense, Dropout, Conv1D, Conv2D, MaxPooling1D, MaxPooling2D, LSTM, \
-    BatchNormalization, Activation, Flatten, Embedding, ReLU,GlobalAveragePooling1D, Input, concatenate
+   BatchNormalization, Activation, Flatten, Embedding, ReLU,GlobalAveragePooling1D, Input, concatenate
 from tensorflow.keras import backend as K
 import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
-config = tf.compat.v1.ConfigProto()
-config.gpu_options.allow_growth = True
-session = tf.compat.v1.Session(config=config)
-session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
-sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
-tf.compat.v1.keras.backend.set_session(sess)
+#config = tf.compat.v1.ConfigProto()
+#config.gpu_options.allow_growth = True
+#session = tf.compat.v1.Session(config=config)
+#session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+#sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
+#tf.compat.v1.keras.backend.set_session(sess)
 
 def mode_DeepOCR():
     def DW_block(X, filters, kernels):

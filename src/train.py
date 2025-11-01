@@ -46,9 +46,24 @@ os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 import random
 from sklearn.model_selection import KFold,StratifiedKFold
-session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
-sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
-tf.compat.v1.keras.backend.set_session(sess)
+import tensorflow as tf
+
+# ✅ 新版 TensorFlow 2.x GPU 記憶體動態增長設定
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        print(f"✅ {len(gpus)} GPU(s) detected and memory growth enabled.")
+    except RuntimeError as e:
+        print(e)
+else:
+    print("⚠️ No GPU detected. Using CPU instead.")
+
+#session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+#sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
+#tf.compat.v1.keras.backend.set_session(sess)
+
 def trainDeepOCR(out, train_seq, train_label, test_seq, test_label,val_split,i):
     train_model = mode_DeepOCR()
     loss = tf.keras.losses.binary_crossentropy
@@ -69,11 +84,12 @@ def trainDeepOCR(out, train_seq, train_label, test_seq, test_label,val_split,i):
                                    )
 
     callback_lists = [checkpoint, early_stopping]
+    
     hist = train_model.fit(train_seq, train_label,
                      # batch_size=128,
                      batch_size=64,#64
-                     epochs=300,
-                     verbose=2,
+                     epochs=10,
+                     verbose=1,
                      callbacks=callback_lists,
                      validation_split=val_split,
                      shuffle=True

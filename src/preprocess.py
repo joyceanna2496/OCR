@@ -54,9 +54,12 @@ def main():
     parser.add_argument('--out', type=str, default='./', help='Output directory')
     parser.add_argument('--pos', type=str, default='pos.fa', help='Positive samples file')
     parser.add_argument('--neg', type=str, default='neg.fa', help='Negative samples file')
+    parser.add_argument('--random', action='store_true', help='enable random processing')
+    parser.add_argument('--fold', type=int, default=10, help='number of folds for cross-validation')
+
     args = parser.parse_args()
     pos=args.pos
-    neg=args.neg
+    neg=args.neg 
     out=args.out
     random=args.random
     fold=args.fold
