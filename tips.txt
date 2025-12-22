@@ -1,0 +1,30 @@
+預處理:(以下六行都要先跑)
+python src/fix_bed_all_chrom.py --bed data/cattle/Rumen/pos.bed --out data/cattle/Rumen/pos.fixed.bed
+python src/fix_sheep_bed.py data/cattle/Rumen/pos.bed data/cattle/Rumen/pos.fixed.bed
+
+python src/fix_bed_all_chrom.py --bed data/cattle/Rumen/neg.bed --out data/cattle/Rumen/neg.fixed.bed
+python src/fix_sheep_bed.py data/cattle/Rumen/neg.bed data/cattle/Rumen/neg.fixed.bed
+
+python src/bed_to_fasta.py --bed data/cattle/Rumen/pos.fixed.bed --ref data/cattle/Rumen/genome.fa --out data/cattle/Rumen/pos.fa
+python src/bed_to_fasta.py --bed data/cattle/Rumen/neg.fixed.bed --ref data/cattle/Rumen/genome.fa --out data/cattle/Rumen/neg.fa
+
+資料切割:
+1.前1000
+python src/preprocess2.py --out data/cattle/Rumen/output/ --pos data/cattle/Rumen/pos.fa --neg data/cattle/Rumen/neg.fa --mode first1000
+2.center
+python src/preprocess2.py --pos data/cattle/Rumen/pos.fa --neg data/cattle/Rumen/neg.fa --out data/cattle/Rumen/output/ --mode center --window 1000
+3.window
+python src/preprocess2.py --pos data/cattle/Rumen/pos.fa --neg data/cattle/Rumen/neg.fa --out data/cattle/Rumen/output/ --mode window --window 1000 --step 200
+4.segment(停用)
+python src/preprocess2.py --pos data/cattle/Rumen/pos.fa --neg data/cattle/Rumen/neg.fa --out data/cattle/Rumen/output/ --mode segment --window 1000 --segment 20
+5.smooth
+python src/preprocess2.py --pos data/cattle/Rumen/pos.fa --neg data/cattle/Rumen/neg.fa --out data/cattle/Rumen/output/ --mode smooth --window 1000
+
+訓練
+python src/train.py --out data/cattle/Rumen/model/ --seq data/cattle/Rumen/output/data_onehot.npy --label data/cattle/Rumen/output/label.npy --val 0.1 --random 0.2
+
+預測
+python src/predict.py --model data/cattle/Rumen/model/model_random.keras --seq data/cattle/Rumen/pos.fa --out data/cattle/Rumen/output/
+
+畫圖
+python src/motif_visualize.py --model data/cattle/Rumen/model/model_random.keras --out data/cattle/Rumen/output/motif/
