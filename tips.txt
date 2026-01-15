@@ -1,30 +1,31 @@
 預處理:(以下六行都要先跑)
-python src/fix_bed_all_chrom.py --bed data/cattle/Rumen/pos.bed --out data/cattle/Rumen/pos.fixed.bed
-python src/fix_sheep_bed.py data/cattle/Rumen/pos.bed data/cattle/Rumen/pos.fixed.bed
+python src/fix_bed_all_chrom.py --bed data/chicken/Flight_muscle/pos.bed --out data/chicken/Flight_muscle/pos.fixed.bed
+python src/fix_sheep_bed.py data/chicken/Flight_muscle/pos.bed data/chicken/Flight_muscle/pos.fixed.bed
 
-python src/fix_bed_all_chrom.py --bed data/cattle/Rumen/neg.bed --out data/cattle/Rumen/neg.fixed.bed
-python src/fix_sheep_bed.py data/cattle/Rumen/neg.bed data/cattle/Rumen/neg.fixed.bed
+python src/fix_bed_all_chrom.py --bed data/chicken/Flight_muscle/neg.bed --out data/chicken/Flight_muscle/neg.fixed.bed
+python src/fix_sheep_bed.py data/chicken/Flight_muscle/neg.bed data/chicken/Flight_muscle/neg.fixed.bed
 
-python src/bed_to_fasta.py --bed data/cattle/Rumen/pos.fixed.bed --ref data/cattle/Rumen/genome.fa --out data/cattle/Rumen/pos.fa
-python src/bed_to_fasta.py --bed data/cattle/Rumen/neg.fixed.bed --ref data/cattle/Rumen/genome.fa --out data/cattle/Rumen/neg.fa
+python src/bed_to_fasta.py --bed data/chicken/Flight_muscle/pos.fixed.bed --ref data/chicken/Flight_muscle/genome.fa --out data/chicken/Flight_muscle/pos.fa
+python src/bed_to_fasta.py --bed data/chicken/Flight_muscle/neg.fixed.bed --ref data/chicken/Flight_muscle/genome.fa --out data/chicken/Flight_muscle/neg.fa
 
 資料切割:
 1.前1000
-python src/preprocess2.py --out data/cattle/Rumen/output/ --pos data/cattle/Rumen/pos.fa --neg data/cattle/Rumen/neg.fa --mode first1000
+python src/preprocess2.py --out data/chicken/Flight_muscle/output/ --pos data/chicken/Flight_muscle/pos.fa --neg data/chicken/Flight_muscle/neg.fa --mode first1000
 2.center
-python src/preprocess2.py --pos data/cattle/Rumen/pos.fa --neg data/cattle/Rumen/neg.fa --out data/cattle/Rumen/output/ --mode center --window 1000
+python src/preprocess2.py --pos data/chicken/Flight_muscle/pos.fa --neg data/chicken/Flight_muscle/neg.fa --out data/chicken/Flight_muscle/output/ --mode center --window 1000
 3.window
-python src/preprocess2.py --pos data/cattle/Rumen/pos.fa --neg data/cattle/Rumen/neg.fa --out data/cattle/Rumen/output/ --mode window --window 1000 --step 200
+python src/preprocess2.py --pos data/chicken/Flight_muscle/pos.fa --neg data/chicken/Flight_muscle/neg.fa --out data/chicken/Flight_muscle/output/ --mode window --window 1000 --step 200
 4.segment(停用)
-python src/preprocess2.py --pos data/cattle/Rumen/pos.fa --neg data/cattle/Rumen/neg.fa --out data/cattle/Rumen/output/ --mode segment --window 1000 --segment 20
+python src/preprocess2.py --pos data/chicken/Flight_muscle/pos.fa --neg data/chicken/Flight_muscle/neg.fa --out data/chicken/Flight_muscle/output/ --mode segment --window 1000 --segment 20
 5.smooth
-python src/preprocess2.py --pos data/cattle/Rumen/pos.fa --neg data/cattle/Rumen/neg.fa --out data/cattle/Rumen/output/ --mode smooth --window 1000
+python src/preprocess2.py --pos data/chicken/Flight_muscle/pos.fa --neg data/chicken/Flight_muscle/neg.fa --out data/chicken/Flight_muscle/output/ --mode smooth --window 1000
 
 訓練
-python src/train.py --out data/cattle/Rumen/model/ --seq data/cattle/Rumen/output/data_onehot.npy --label data/cattle/Rumen/output/label.npy --val 0.1 --random 0.2
+python src/train.py --out data/chicken/Flight_muscle/model/ --seq data/chicken/Flight_muscle/output/data_onehot.npy --label data/chicken/Flight_muscle/output/label.npy --val 0.1 --random 0.2
+python src/train_multi.py --out data/chicken/Flight_muscle/model/ --seq data/chicken/Flight_muscle/output/data_onehot.npy --local data/chicken/Flight_muscle/output/local.npy --kmer data/chicken/Flight_muscle/output/kmer.npy --label data/chicken/Flight_muscle/output/label.npy --val 0.1 --random 0.2
 
 預測
-python src/predict.py --model data/cattle/Rumen/model/model_random.keras --seq data/cattle/Rumen/pos.fa --out data/cattle/Rumen/output/
+python src/predict.py --model data/chicken/Flight_muscle/model/model_random.keras --seq data/chicken/Flight_muscle/pos.fa --out data/chicken/Flight_muscle/output/
 
 畫圖
-python src/motif_visualize.py --model data/cattle/Rumen/model/model_random.keras --out data/cattle/Rumen/output/motif/
+python src/motif_visualize.py --model data/chicken/Flight_muscle/model/model_random.keras --out data/chicken/Flight_muscle/output/motif/
