@@ -1,100 +1,62 @@
 # DeepOCR                                          
-# a multi-species deep learning-based framework for accurate identification of open chromatin regions in livestock
+## 預處理:
 
+### 1.positive
+python src/fix_bed_all_chrom.py --bed data/cattle/Rumen/pos.bed --out data/cattle/Rumen/pos.fixed.bed
+羊才要:
+python src/fix_cattle_bed.py data/cattle/Rumen/pos.bed data/cattle/Rumen/pos.fixed.bed
 
-## INSTALLATION 
-git clone https://github.com/jasonzhao371/DeepOCR.git
+### 2.negative
+python src/fix_bed_all_chrom.py --bed data/cattle/Rumen/neg.bed --out data/cattle/Rumen/neg.fixed.bed
+羊才要:
+python src/fix_cattle_bed.py data/cattle/Rumen/neg.bed data/cattle/Rumen/neg.fixed.bed
 
-## Requirements
-- Scikit-learn (http://scikit-learn.org/)
-- tensorflow-gpu (https://pypi.org/project/tensorflow-gpu/)
-- bedtools (https://bedtools.readthedocs.io/en/latest/)
-- h5py (https://pypi.org/project/h5py/)
-
-# Instructions
-
-## Step 1.Preprocessing
-### To preprocess the sequences, use the following command:
-```shell
-python ./src/preprocess.py --out <output directory> --pos <positive samples file> --neg <negative samples file>
-```
-### It will output two files including the sequence encoding file and the label encoding file in the output directory.
-#### Arguments
-  
-- output directory: the output file path of the final processed data(npy format)
-  
-- positive samples file: positive samples(.fa)
-  
- ```
- e.g.
- >Chr:start-end
-  AAAGTTTATTTGAGGCTGGAACAGCACCAAGGGTATAAATGGAAAAAACAGAAGT...
- ```
-negative samples file: negative samples(.fa)
- ```
- e.g.
- >Chr:start-end
-  AGGTGTTAACTTTTAAAGAAGAATATATTAAGTTATGCCTACCGTGGAATAAGGT...
- ```
-#### Notes
-If your input file is in bed format,first you need to extract the fasta sequence using bedtools.
-```
-$ bedtools getfasta -fi <Reference Genome> -bed <your bed format file> -s -fo <Output file>
-```
-## Step 2.Training and evaluation
-### To train and evaluate the model, use the following command:
-```shell
-python ./src/train.py --out <output directory> --seq <sequence encoding file> --label <label encoding file> --val 0.1 <--random 0.2 > <--fold 10 >
-```
-### It will output the trained model in the output directory.
-#### Arguments
-
-- output directory: the output path of the model 
-  
-- sequence encoding file: one of the preprocessed output files
-  
-- label encoding file: one of the preprocessed output files
-  
-- val: the proportion of the validation
-  
-- random: proportion of test sets in random splitting(optional)
-  
-- fold: number of folds for cross validation( optional)
-
-## Step 3.Prediction
-### To predict on the trained model, use the following command:
-```shell
-python ./src/predict.py --out <output directory> --seq <sequence> --model <model file>
-```
-### It will output the results in the output directory(0: nonOCRs,1:OCRs).
-#### Arguments
-
-- output directory: the output path of prediction 
-
-- sequence : the sequences to predict(.fa)
-
-- model file: the trained model(.hdf5)
-
-# Example for users
-## If users wish to utilize their own datasets, here is a straightforward example illustrating the entire process from data preparation to complete model training and prediction (all files are located in the 'example' directory).
-### 1.Preprocessing
-```shell
-python ./src/preprocess.py --out ./example/ --pos ./example/pos_test.fa --neg ./example/neg_test.fa
-```
-#### It will output two files including the sequence encoding file(./example/data_onehot.npy) and the label encoding file(./example/label.npy)
-
-### 2.Training and evaluation
-```shell
-python ./src/train.py --out ./example/ --seq ./example/data_onehot.npy  --label ./example/label.npy --val 0.1 --random 0.2
-```
-#### It will output the trained model(./example/model_random.hdf5)
-
-### 3.Prediction
-```shell
-python ./src/predict.py --out ./example --seq ./example/test.fa --model ./example/model_random.hdf5
-```  
- #### It will output the results(./example/pred.csv)
+### 3.轉檔
+python src/bed_to_fasta.py --bed data/cattle/Rumen/pos.fixed.bed --ref data/cattle/Rumen/genome.fa --out data/cattle/Rumen/pos.fa
+python src/bed_to_fasta.py --bed data/cattle/Rumen/neg.fixed.bed --ref data/cattle/Rumen/genome.fa --out data/cattle/Rumen/neg.fa
 
 
 
-"# OCR" 
+## 資料切割:
+###  1.前1000
+python src/preprocess.py --out data/cattle/Rumen/output/ --pos data/cattle/Rumen/pos.fa --neg data/cattle/Rumen/neg.fa --mode first1000
+
+### 2.center
+python src/preprocess.py --pos data/cattle/Rumen/pos.fa --neg data/cattle/Rumen/neg.fa --out data/cattle/Rumen/output/ --mode center --window 1000
+
+### 3.window
+python src/preprocess.py --pos data/cattle/Rumen/pos.fa --neg data/cattle/Rumen/neg.fa --out data/cattle/Rumen/output/ --mode window --window 1000 --step 200
+
+### 4.smooth
+python src/preprocess.py --pos data/cattle/Rumen/pos.fa --neg data/cattle/Rumen/neg.fa --out data/cattle/Rumen/output/ --mode smooth --window 1000
+
+### 5.搭配k-mer和local(推薦)
+(1)前1000+local4+3-mer
+python src/preprocess.py --out data/cattle/Rumen/output/ --pos data/cattle/Rumen/pos.fa --neg data/cattle/Rumen/neg.fa --mode first1000 --local_seg 4 --k 3
+(2)前1000+local5+4-mer
+python src/preprocess.py --out data/cattle/Rumen/output/ --pos data/cattle/Rumen/pos.fa --neg data/cattle/Rumen/neg.fa --mode first1000 --local_seg 5 --k 4
+
+
+
+## 訓練:(根據需要的方法靈活調整)(以下示範幾種)
+### 1.base
+python src/train.py --seq data/cattle/Rumen/output/data_onehot.npy --label data/cattle/Rumen/output/label.npy --out data/cattle/Rumen/model/  --val 0.1 --random 0.2
+
+### 2.base+local4
+python src/train.py --seq data/cattle/Rumen/output/data_onehot.npy --local data/cattle/Rumen/output/local_seg4.npy --label data/cattle/Rumen/output/label.npy --out data/cattle/Rumen/model/ --val 0.1 --random 0.2
+
+### 3.base+3mer
+python src/train.py --seq data/cattle/Rumen/output/data_onehot.npy --kmer data/cattle/Rumen/output/kmer_k3.npy --label data/cattle/Rumen/output/label.npy --out data/cattle/Rumen/model/ --val 0.1 --random 0.2
+
+### 4.base+3mer+local4
+python src/train.py --seq data/cattle/Rumen/output/data_onehot.npy --local data/cattle/Rumen/output/local_seg4.npy --kmer data/cattle/Rumen/output/kmer_k3.npy --label data/cattle/Rumen/output/label.npy --out data/cattle/Rumen/model/ --val 0.1 --random 0.2
+
+
+
+## 預測
+python src/predict.py --model data/cattle/Rumen/model/model_random.keras --seq data/cattle/Rumen/pos.fa --out data/cattle/Rumen/output/
+
+
+
+## 畫圖
+python src/motif_visualize.py --model data/cattle/Rumen/model/model_random.keras --out data/cattle/Rumen/output/motif/ 
